@@ -1,0 +1,271 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>GAAYATRI – Smart Cattle Intelligence</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<!-- Markdown rendering -->
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/dompurify@2.4.0/dist/purify.min.js"></script>
+
+<style>
+body {
+  margin: 0;
+  font-family: "Segoe UI", system-ui, sans-serif;
+  background: #f6f8fa;
+  color: #1f2937;
+}
+
+.hero {
+  max-width: 1100px;
+  margin: auto;
+  padding: 60px 20px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 40px;
+  align-items: center;
+}
+
+.hero img {
+  width: 100%;
+  max-width: 320px;
+}
+
+h1 {
+  font-size: 2.4rem;
+  margin-bottom: 16px;
+}
+
+p {
+  line-height: 1.6;
+  font-size: 1.05rem;
+}
+
+.section {
+  margin-top: 24px;
+}
+
+.section h3 {
+  margin-bottom: 8px;
+}
+
+.badge {
+  display: inline-block;
+  background: #e0f2fe;
+  color: #0369a1;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  margin-bottom: 10px;
+}
+
+/* Floating Chat Button */
+#chat-launcher {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: #0f766e;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  box-shadow: 0 12px 24px rgba(0,0,0,0.2);
+  z-index: 999;
+}
+
+#chat-launcher img {
+  width: 36px;
+}
+
+/* Chat Popup */
+#chat-popup {
+  position: fixed;
+  bottom: 100px;
+  right: 24px;
+  width: 360px;
+  max-height: 520px;
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.25);
+  display: none;
+  flex-direction: column;
+  overflow: hidden;
+  z-index: 1000;
+}
+
+.chat-header {
+  background: #0f766e;
+  color: white;
+  padding: 14px;
+  font-weight: bold;
+}
+
+.chat-body {
+  padding: 10px;
+  overflow-y: auto;
+  flex: 1;
+  font-size: 10px;   /* 👈 FIX */
+  line-height: 1.4;
+}
+
+
+.chat-input {
+  display: flex;
+  border-top: 1px solid #e5e7eb;
+}
+
+.chat-input input {
+  flex: 1;
+  padding: 10px;
+  border: none;
+}
+
+.chat-input button {
+  padding: 10px 14px;
+  border: none;
+  background: #0f766e;
+  color: white;
+  cursor: pointer;
+}
+
+.msg.user { text-align: right; margin: 8px 0; }
+.msg.bot { text-align: left; margin: 8px 0; }
+
+.msg span {
+  display: inline-block;
+  padding: 6px 8px;
+  border-radius: 10px;
+  max-width: 85%;
+  font-size: 10px;   /* 👈 FIX */
+}
+
+
+.msg.user span { background: #dcfce7; }
+.msg.bot span { background: #f1f5f9; }
+
+@media (max-width: 768px) {
+  .hero {
+    grid-template-columns: 1fr;
+    text-align: center;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<section class="hero">
+  <div>
+    <span class="badge">AI for Dairy & Livestock</span>
+    <h1>GAAYATRI – Smart Cattle Management Platform</h1>
+    <p>
+      GAAYATRI is an AI-powered decision-support platform designed to improve the
+      productivity, health, and sustainability of cattle farming.
+      It assists livestock owners with real-time insights, early disease detection,
+      nutrition guidance, and operational planning.
+    </p>
+
+    <div class="section">
+      <h3>Core Working</h3>
+      <p>
+        GAAYATRI collects basic farm and cattle data and applies AI/ML models to:
+      </p>
+      <ul>
+        <li>Monitor cattle health and detect early risk signals</li>
+        <li>Improve milk yield through nutrition and comfort optimization</li>
+        <li>Support breeding and lifecycle management</li>
+        <li>Reduce veterinary costs via preventive alerts</li>
+        <li>Empower farmers with simple, actionable recommendations</li>
+      </ul>
+    </div>
+
+    <div class="section">
+      <h3>Why GAAYATRI?</h3>
+      <p>
+        Most cattle losses happen due to late diagnosis and poor information access.
+        GAAYATRI acts as a digital assistant that helps farmers take the right action
+        at the right time — using technology that works even with limited data.
+      </p>
+    </div>
+  </div>
+
+  <div>
+    <img src="{% static 'cattle_chat/logo.png' %}" alt="GAAYATRI Logo">
+  </div>
+</section>
+
+<!-- Floating Chat -->
+ 
+<div id="chat-launcher" onclick="toggleChat()">
+  <img src="{% static 'cattle_chat/logo.png' %}">
+</div>
+
+<div id="chat-popup">
+  <div class="chat-header">GAAYATRI Assistant</div>
+  <div class="chat-body" id="chatBody"></div>
+  <div class="chat-input">
+    <input id="chatInput" placeholder="Ask about cattle..." />
+    <button onclick="sendMsg()">Send</button>
+  </div>
+</div>
+
+<script>
+const popup = document.getElementById("chat-popup");
+const body = document.getElementById("chatBody");
+const input = document.getElementById("chatInput");
+let welcomed = false;
+
+function showWelcome() {
+  if (welcomed) return;
+  addMsg(
+    "👋 **Welcome to GAAYATRI Assistant**\n\nYou can ask me about:\n- Cattle health & diseases\n- Milk production\n- Nutrition & feed\n- Breeding & reproduction\n\nHow can I help you today?",
+    "bot"
+  );
+  welcomed = true;
+}
+
+function toggleChat() {
+  const open = popup.style.display !== "flex";
+  popup.style.display = open ? "flex" : "none";
+  if (open) showWelcome();   // 👈 trigger welcome
+}
+
+
+function addMsg(text, cls) {
+  const d = document.createElement("div");
+  d.className = "msg " + cls;
+  const s = document.createElement("span");
+  s.innerHTML = DOMPurify.sanitize(marked.parse(text));
+  d.appendChild(s);
+  body.appendChild(d);
+  body.scrollTop = body.scrollHeight;
+}
+
+async function sendMsg() {
+  const q = input.value.trim();
+  if (!q) return;
+  input.value = "";
+  addMsg(q, "user");
+
+  const r = await fetch("/cattle-chat/api/chat/", {
+    method: "POST",
+    headers: {"Content-Type":"application/json"},
+    body: JSON.stringify({message:q})
+  });
+
+  const data = await r.json();
+  addMsg(data.ok ? data.answer : data.message, "bot");
+}
+
+input.addEventListener("keydown", e => {
+  if (e.key === "Enter") sendMsg();
+});
+</script>
+
+</body>
+</html>
